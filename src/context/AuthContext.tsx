@@ -23,6 +23,7 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, name: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  withdraw: () => Promise<{ success: boolean; error?: string }>;
   deductPoints: (amount: number) => boolean;
   addPoints: (amount: number) => void;
   openAuthModal: (mode?: 'login' | 'signup') => void;
@@ -186,6 +187,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.signOut().catch(() => {});
   };
 
+  const withdraw = async () => {
+    if (!user) {
+      return { success: false, error: '로그인된 사용자 정보가 없습니다.' };
+    }
+
+    try {
+      // 1. 서버 API 호출하여 DB 레코드 삭제
+      const res = await fetch('/api/auth/withdraw', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, email: user.email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || '회원 탈퇴에 실패했습니다.' };
+      }
+
+      // 2. 브라우저 세션 및 사용자 캐시 완전 정리
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('dasseoba_user');
+        localStorage.removeItem('dasseoba_user');
+        localStorage.removeItem(`dasseoba_cart_${user.id}`);
+        localStorage.removeItem(`dasseoba_wishlist_${user.id}`);
+        localStorage.removeItem('dasseoba_orders');
+      }
+
+      // 3. 로그아웃 상태로 전환
+      setUser(null);
+      supabase.auth.signOut().catch(() => {});
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || '서버 통신 오류가 발생했습니다.' };
+    }
+  };
+
   const deductPoints = (amount: number) => {
     if (!user || user.points < amount) return false;
     const newPoints = user.points - amount;
@@ -234,6 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        withdraw,
         deductPoints,
         addPoints,
         openAuthModal,

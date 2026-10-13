@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import LoginRequired from '@/components/auth/LoginRequired';
@@ -41,12 +42,35 @@ interface OrderItem {
 }
 
 export default function MyPage() {
-  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const { user, isLoading, logout, withdraw } = useAuth();
   const { wishlistCount } = useWishlist();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [selectedOrderForTax, setSelectedOrderForTax] = useState<OrderItem | null>(null);
   const [taxBusinessNo, setTaxBusinessNo] = useState('123-45-67890');
   const [taxCompanyName, setTaxCompanyName] = useState('(주)한국모자클럽');
+
+  // 회원 탈퇴 모달 및 진행 상태
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleConfirmWithdraw = async () => {
+    setIsWithdrawing(true);
+    try {
+      const res = await withdraw();
+      if (res.success) {
+        alert('회원 탈퇴가 정상적으로 완료되었습니다.\n그동안 다써바를 이용해 주셔서 진심으로 감사드립니다.');
+        setIsWithdrawModalOpen(false);
+        router.push('/');
+      } else {
+        alert(res.error || '회원 탈퇴 처리에 실패했습니다. 고객센터로 문의해주세요.');
+        setIsWithdrawing(false);
+      }
+    } catch (e: any) {
+      alert('회원 탈퇴 중 오류가 발생했습니다: ' + e.message);
+      setIsWithdrawing(false);
+    }
+  };
 
   useEffect(() => {
     // 1. 로컬 스토리지 주문 1차 로드 (빠른 반응성)
@@ -296,6 +320,24 @@ export default function MyPage() {
                 </span>
               </div>
               <p className="text-xs text-zinc-400 mt-1">{user?.email || 'customer@dasseoba.com'}</p>
+              <div className="flex items-center gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="text-xs text-zinc-400 hover:text-white transition underline"
+                >
+                  로그아웃
+                </button>
+                <span className="text-zinc-600 text-xs">|</span>
+                <button
+                  type="button"
+                  onClick={() => setIsWithdrawModalOpen(true)}
+                  data-testid="withdraw-btn-top"
+                  className="text-xs text-red-400 hover:text-red-300 transition underline"
+                >
+                  회원탈퇴
+                </button>
+              </div>
             </div>
           </div>
 
@@ -508,6 +550,86 @@ export default function MyPage() {
             </div>
           )}
         </div>
+
+        {/* 계정 관리 & 회원 탈퇴 섹션 */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-black text-zinc-900 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-zinc-400" /> 계정 관리
+            </h3>
+            <p className="text-xs text-zinc-500 mt-1">
+              회원 탈퇴 시 보유 적립금, 주문 내역, 찜한 상품 및 장바구니 정보가 모두 안전하게 영구 삭제됩니다.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsWithdrawModalOpen(true)}
+            data-testid="withdraw-button"
+            className="self-start sm:self-auto px-4 py-2 border border-zinc-200 hover:border-red-300 hover:bg-red-50 text-zinc-500 hover:text-red-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          >
+            회원탈퇴 신청
+          </button>
+        </div>
+
+        {/* 회원 탈퇴 확인 모달 */}
+        {isWithdrawModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              onClick={() => !isWithdrawing && setIsWithdrawModalOpen(false)}
+            />
+            <div
+              data-testid="withdraw-modal"
+              className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-zinc-200 z-10 space-y-5"
+            >
+              <div className="flex items-center gap-3 text-red-600">
+                <div className="w-10 h-10 rounded-2xl bg-red-100 flex items-center justify-center font-bold">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-zinc-950">정말 탈퇴하시겠습니까?</h3>
+                  <p className="text-xs text-zinc-500">다써바 회원 탈퇴 안내</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 text-xs text-zinc-600 space-y-2 leading-relaxed">
+                <p className="font-bold text-zinc-800">⚠️ 탈퇴 시 주의사항</p>
+                <ul className="list-disc list-inside space-y-1 text-zinc-500 text-[11px]">
+                  <li>보유 중인 모든 <strong className="text-amber-600 font-bold">적립금({(user?.points || 0).toLocaleString()}P)</strong>은 즉시 소멸되며 복구할 수 없습니다.</li>
+                  <li>진행 중인 주문 및 배송 내역, 장바구니, 찜 목록이 영구 삭제됩니다.</li>
+                  <li>동일한 이메일로 재가입하더라도 기존 구매 데이터는 복원되지 않습니다.</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  disabled={isWithdrawing}
+                  onClick={() => setIsWithdrawModalOpen(false)}
+                  className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-xs rounded-xl transition disabled:opacity-50"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  disabled={isWithdrawing}
+                  onClick={handleConfirmWithdraw}
+                  data-testid="confirm-withdraw-button"
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isWithdrawing ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      탈퇴 처리 중...
+                    </>
+                  ) : (
+                    '탈퇴 확인'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
