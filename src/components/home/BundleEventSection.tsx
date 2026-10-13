@@ -120,7 +120,7 @@ export default function BundleEventSection() {
 
                     {/* 컬러 옵션 칩 */}
                     <div className="flex items-center gap-1 mt-2.5 flex-wrap">
-                      {product.colors.slice(0, 4).map((c, i) => (
+                      {product.colors.slice(0, 4).map((c: string, i: number) => (
                         <span
                           key={i}
                           className="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-200"

@@ -2,7 +2,8 @@
 
 import React, { useState, use } from 'react';
 import Link from 'next/link';
-import { CATEGORIES, ProductItem } from '@/lib/data/mockData';
+import { CATEGORIES } from '@/lib/data/mockData';
+import { ProductItem } from '@/types/shop';
 import { useProducts } from '@/hooks/useProducts';
 import { Star, Heart, ShoppingBag, ArrowLeft, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -265,7 +266,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                       </p>
 
                       <div className="flex items-center gap-1 mt-2 flex-wrap">
-                        {product.colors.map((c, i) => (
+                        {product.colors.map((c: string, i: number) => (
                           <span
                             key={i}
                             className="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded"

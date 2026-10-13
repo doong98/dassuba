@@ -1,4 +1,5 @@
 import { Category, ProductItem, BannerSlide } from '@/types/shop';
+export type { Category, ProductItem, BannerSlide };
 
 export const CATEGORIES: Category[] = [
   {

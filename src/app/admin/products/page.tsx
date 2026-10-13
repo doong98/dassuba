@@ -149,7 +149,7 @@ export default function AdminProductsPage() {
         images: [imageUrl || '/images/products/bundle-1.png'],
         colors: ['블랙', '화이트'],
         sizes: ['FREE'],
-        badge: isBundle1Plus1 ? '1+1' : 'NEW',
+        badge: (isBundle1Plus1 ? '1+1' : 'NEW') as ProductItem['badge'],
         description: '다써바 신규 등록 모자 상품',
       };
 

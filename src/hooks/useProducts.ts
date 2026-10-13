@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { MOCK_PRODUCTS, ProductItem } from '@/lib/data/mockData';
+import { MOCK_PRODUCTS } from '@/lib/data/mockData';
+import { ProductItem } from '@/types/shop';
 
 export function useProducts() {
   const [products, setProducts] = useState<ProductItem[]>(MOCK_PRODUCTS);

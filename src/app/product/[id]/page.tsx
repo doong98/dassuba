@@ -147,7 +147,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {/* 썸네일 리스트 */}
             {product.images.length > 1 && (
               <div className="flex items-center gap-3">
-                {product.images.map((img, idx) => (
+                {product.images.map((img: string, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(img)}
@@ -238,7 +238,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   색상 선택 <span className="text-zinc-400 font-normal">({selectedColor})</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {product.colors.map((color) => {
+                  {product.colors.map((color: string) => {
                     const isSelected = selectedColor === color;
                     return (
                       <button
@@ -264,7 +264,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   사이즈 선택 <span className="text-zinc-400 font-normal">({selectedSize})</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size) => {
+                  {product.sizes.map((size: string) => {
                     const isSelected = selectedSize === size;
                     return (
                       <button
